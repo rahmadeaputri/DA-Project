@@ -17,23 +17,23 @@ Dataset yang digunakan mencakup informasi sebagai berikut.
 - Dataset day berisi penggunaan sepeda per-hari
 - Dataset hour berisi penggunaan sepeda per-jam
 - Dataset ini terdiri dari beberapa fields dengan penjelasan sebagai berikut : 
-    1. instant -> indeks atau nomor urut untuk setiap catatan dalam dataset 
-    2. dteday -> tanggal penyewaan sepeda dg format (yyyy-mm-dd)
-    3. season -> musim penyewaan (1: semi, 2: panas, 3: gugur, 4: dingin)
-    4. yr -> tahun penyewaan (0: 2011, 1:2012)
-    5. mnth -> bulan penyewaan (1-12)
-    6. holiday -> menunjukkan hari libur/tidak (1: libur, 0: Bukan hari libur)
-    7. weekday -> hari dalam seminggu (0: minggu, 1: senin, dst )
-    8. workingday -> hari kerja/tidak (0: bukan hari kerja, 1: hari kerja)
-    9. weathershit -> kode kondisi cuaca (1: cerah, 2: berawan + kabut, 3: hujan/rintik, 4:hujan berat + salju)
-    10. temp -> suhu dalam celcius (skala 0-1)
-    11. atempt -> suhu terasa dalam celcius (0-1)
-    12. hum -> kelembapan (skala 0-1)
-    13. windspeed -> kecepatan angin (skala 0-1)
-    14. casual -> jumlah pengguna kasual yang menyewa sepeda 
-    15. registered -> jumlah pengguna terdaftar yang menyewa sepeda
-    16. cnt -> total jumlah penyewa sepeda(casual + registered)
-    17. hr -> jam penyewaan (0-23) **hanya tersedia di hour.csv
+    - instant -> indeks atau nomor urut untuk setiap catatan dalam dataset 
+    - dteday -> tanggal penyewaan sepeda dg format (yyyy-mm-dd)
+    - season -> musim penyewaan (1: semi, 2: panas, 3: gugur, 4: dingin)
+    - yr -> tahun penyewaan (0: 2011, 1:2012)
+    - mnth -> bulan penyewaan (1-12)
+    - holiday -> menunjukkan hari libur/tidak (1: libur, 0: Bukan hari libur)
+    - weekday -> hari dalam seminggu (0: minggu, 1: senin, dst )
+    - workingday -> hari kerja/tidak (0: bukan hari kerja, 1: hari kerja)
+    - weathershit -> kode kondisi cuaca (1: cerah, 2: berawan + kabut, 3: hujan/rintik, 4:hujan berat + salju)
+    - temp -> suhu dalam celcius (skala 0-1)
+    - atempt -> suhu terasa dalam celcius (0-1)
+    - hum -> kelembapan (skala 0-1)
+    - windspeed -> kecepatan angin (skala 0-1)
+    - casual -> jumlah pengguna kasual yang menyewa sepeda 
+    - registered -> jumlah pengguna terdaftar yang menyewa sepeda
+    - cnt -> total jumlah penyewa sepeda(casual + registered)
+    - hr -> jam penyewaan (0-23) **hanya tersedia di hour.csv
 
 ### Analisis dan Visualisasi
 1. Pola Penggunaan Berdasarkan Waktu
@@ -71,14 +71,14 @@ Dataset yang digunakan mencakup informasi sebagai berikut.
 ### Cara Menggunakan 
 
 #### Setup Environment - Shell/Terminal
-'''
+```
 mkdir proyek_analisis_data
 cd proyek_analisis_data
 pipenv install
 pipenv shell
 pip install 
-'''
+```
 #### Run streamlit app
-'''
+```
 streamlit run dashboard.py
-'''
+```
