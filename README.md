@@ -71,12 +71,14 @@ Dataset yang digunakan mencakup informasi sebagai berikut.
 ### Cara Menggunakan 
 
 #### Setup Environment - Shell/Terminal
-
+'''
 mkdir proyek_analisis_data
 cd proyek_analisis_data
 pipenv install
 pipenv shell
 pip install 
-
+'''
 #### Run streamlit app
+'''
 streamlit run dashboard.py
+'''
