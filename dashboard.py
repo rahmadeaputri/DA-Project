@@ -58,7 +58,6 @@ weathersit_mapping = {
     4: "Heavy Rain/Snow"
 }
 
-#--------------------------------------------------------------------------
 #membaca data dari csv
 hour_df = pd.read_csv("data/cleaned/hour_df_cleaned.csv")
 day_df = pd.read_csv("data/cleaned/day_df_cleaned.csv")
@@ -76,14 +75,9 @@ heatmap_data.index=heatmap_data.index.map(
 #menghitung korlasi antar variabel
 correlation_matrix = numerical_df(day_df)
 
-#--------------------------------------------------------------------------
-#col1, col2 = st.columns([2,2])
-
 #heatmap
-#col1.markdown("## Peak Bike Usage by Season and Weather")
 st.subheader('Peak Bike Usage by Season and Weather')
-#with col1:
-fig,ax = plt.subplots(figsize=(16,7))
+fig,ax = plt.subplots(figsize=(18,7))
 sns.heatmap(
     heatmap_data, 
     cmap="YlGnBu", 
@@ -124,7 +118,7 @@ sns.barplot(
     ci=None
     )
 plt.ylabel('Average Bike Rentals')
-plt.xlabel('Days Type')
+plt.xlabel('')
 plt.legend(title='Tipe Pengguna', loc='upper left')
 st.pyplot(fig)
 
