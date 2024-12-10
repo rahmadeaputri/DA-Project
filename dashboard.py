@@ -47,7 +47,7 @@ def numerical_df(day_df):
 season_mapping = {
     1: "Spring",
     2: "Summer",
-    3: "Fall",
+    3: "FAll",
     4: "Winter"
 }
 
@@ -57,48 +57,110 @@ weathersit_mapping = {
     3: "Light Rain/Snow",
     4: "Heavy Rain/Snow"
 }
-
+#---------------------------------------------------------------------
 #membaca data dari csv
 hour_df = pd.read_csv("data/cleaned/hour_df_cleaned.csv")
 day_df = pd.read_csv("data/cleaned/day_df_cleaned.csv")
 rfm_combined = pd.read_csv("data/cleaned/rfm_combined.csv")        
 
+st.subheader(':sparkles: Peak Bike Usage by Season and Weather')
 #menghitung rata-rata penyewaan per jam, musim dan cuaca
 avg_rentals = avg_rentals_per_hour(hour_df)
 #membuat data untuk heatmap
-heatmap_data = create_heatmap_data(avg_rentals)
+#heatmap_data = create_heatmap_data(avg_rentals)
+
+selected_season = st.selectbox(
+    "Season:",
+    ["All"] + list(season_mapping.values())  # Tambahkan "All" ke list pilihan
+)
+
+selected_weather = st.selectbox(
+    "Weather",
+    ["All"] + list(weathersit_mapping.values())  # Tambahkan "All" ke list pilihan
+)
+
+# Filter berdasarkan season
+if selected_season == "All":
+    filtered_data = avg_rentals.copy()  # Jika "All", gunakan All data
+else:
+    # Cari kode season berdasarkan nama season yang dipilih
+    selected_season_code = {v: k for k, v in season_mapping.items()}[selected_season]
+    filtered_data = avg_rentals[avg_rentals['season'] == selected_season_code]
+
+# Filter berdasarkan weather
+if selected_weather == "All":
+    filtered_data = filtered_data  # Tidak perlu filter tambahan
+else:
+    # Cari kode weather berdasarkan nama weather yang dipilih
+    selected_weather_code = {v: k for k, v in weathersit_mapping.items()}[selected_weather]
+    filtered_data = filtered_data[filtered_data['weathersit'] == selected_weather_code]
+
+# Pivot table untuk data terfilter (lapisan atas - warna penuh)
+heatmap_data_filtered = create_heatmap_data(filtered_data)
+# Pivot table untuk seluruh data (lapisan utama - pudar)
+heatmap_data_All = create_heatmap_data(avg_rentals)
+
+#st.write("Heatmap Data All", heatmap_data_All)
+#st.write("Heatmap Data Filtered", heatmap_data_filtered)
+
 #buat label gabungan untuk sumbu Y
-heatmap_data.index=heatmap_data.index.map(
+heatmap_data_All.index = heatmap_data_All.index.map(
+    lambda x: f"{season_mapping[x[0]]} - {weathersit_mapping[x[1]]}"
+)
+heatmap_data_filtered.index = heatmap_data_filtered.index.map(
     lambda x: f"{season_mapping[x[0]]} - {weathersit_mapping[x[1]]}"
 )
 
-#menghitung korlasi antar variabel
-correlation_matrix = numerical_df(day_df)
+#st.write("Filtered Heatmap Data for Visualization:", heatmap_data_filtered) 
 
 #heatmap
-st.subheader('Peak Bike Usage by Season and Weather')
+st.markdown(f'#### Peak Bike Usage {selected_season} Season During {selected_weather} Weather')
 fig,ax = plt.subplots(figsize=(18,7))
+# Heatmap utama (seluruh data dengan transparansi rendah)
 sns.heatmap(
-    heatmap_data, 
-    cmap="YlGnBu", 
-    annot=True, 
+    heatmap_data_All,
+    cmap="YlGnBu",
+    annot=False,
+    cbar=False,
+    alpha=0.3,  # Transparansi rendah
+    ax=ax,
+    vmin=0,
+    vmax=670
+)
+# Heatmap overlay (data terfilter dengan warna penuh)
+sns.heatmap(
+    heatmap_data_filtered, 
+    cmap="YlGnBu",
+    annot=True,  
     fmt='.1f', 
     cbar_kws={'label': 'Average Bike Rentals'}, 
-    linewidths=0.5
+    linewidths=0.5,
+    ax=ax,
+    vmin=0,
+    vmax=670
     )
 plt.xlabel("Hours")
 plt.ylabel("Season and Weather")
-plt.xticks(rotation=0)
-plt.yticks(rotation=0)
+#plt.xticks(rotation=0)
+#plt.yticks(rotation=0)
 st.pyplot(fig)
 
+#----------------------------------------------------------------------
 #scatterplot
-st.subheader('Effects of Weather Conditions and Temperature on Bike Rental Trends')
+st.subheader(":sparkles: Effects of Weather Conditions and Temperature on Bike Rental Trends")
+temp_min, temp_max = st.slider(
+    "Range of Temperature (Normalized):",
+    float(hour_df['temp'].min()),
+    float(hour_df['temp'].max()),
+    (float(hour_df['temp'].min()), float(hour_df['temp'].max()))
+)
+filtered_hour_df = hour_df[(hour_df['temp'] >= temp_min) & (hour_df['temp'] <= temp_max)]
+st.markdown(f"#### Bike Rentals for Temperature Range {temp_min:.2f} - {temp_max:.2f}")
 fig,ax = plt.subplots(figsize=(10, 6))
 sns.scatterplot(
     x='temp', 
     y='cnt', 
-    data=hour_df, 
+    data=filtered_hour_df, 
     hue='weathersit_condition', 
     palette='coolwarm'
     )
@@ -107,26 +169,43 @@ plt.ylabel("Total of Bike Rentals")
 plt.legend(title="Weather Condition", loc='upper left')
 st.pyplot(fig)
 
+#----------------------------------------------------------------------------
+
 # barplot
-st.subheader('Analyzing User Behavior: Registered vs. Casual Bike Rentals on Weekdays and Holidays')
+st.subheader(':sparkles: Analyzing User Behavior: Registered vs. Casual Bike Rentals on Weekdays and Holidays')
+
+day_type_options = st.multiselect(
+    "Choose Day Type (Weekday, Weekend, Holiday)", 
+    day_df['day_type'].unique(), 
+    default=day_df['day_type'].unique()
+)
+
+filtered_day_df = day_df[day_df['day_type'].isin(day_type_options)]
 fig,ax = plt.subplots(figsize=(10, 6))
 sns.barplot(
     x='day_type', 
     y='cnt', 
     hue='user_type', 
-    data=day_df, 
+    data=filtered_day_df, 
     ci=None
     )
 plt.ylabel('Average Bike Rentals')
 plt.xlabel('')
-plt.legend(title='Tipe Pengguna', loc='upper left')
+plt.legend(title='User', loc='upper left')
 st.pyplot(fig)
 
+#-------------------------------------------------------------------------------
+st.subheader(':sparkles: Major Factors Impacting Bike Rental Usage')
+columns_to_include = st.multiselect(
+    "Select Columns for Correlation Heatmap",
+    day_df.select_dtypes(include=['int64', 'float64']).columns,
+    default=day_df.select_dtypes(include=['int64', 'float64']).columns
+)
 #heatmap korelasi variabel
-st.subheader('Major Factors Impacting Bike Rental Usage')
+correlation_matrix_filtered = day_df[columns_to_include].corr()
 fig,ax = plt.subplots(figsize=(16, 7))
 sns.heatmap(
-    correlation_matrix, 
+    correlation_matrix_filtered, 
     annot=True, 
     cmap='coolwarm', 
     vmin=-1, 
@@ -134,11 +213,19 @@ sns.heatmap(
     )
 st.pyplot(fig)
 
+#-----------------------------------------------------------------------------
+
 #barplots
-st.subheader('Behavioral Patterns of Bike Users (Casual vs. Registered) Based on Rental Time, Usage Intensity, and Total Contribution')
+st.subheader(':sparkles: Behavioral Patterns of Bike Users (Casual vs. Registered) Based on Rental Time, Usage Intensity, and Total Contribution')
+selected_user_segment = st.selectbox(
+    "Segment", 
+    rfm_combined['user_segment'].unique()
+)
+filtered_rfm_combined = rfm_combined[rfm_combined['user_segment'] == selected_user_segment]
+st.markdown(f"#### Behavioral Patterns for Segment: {selected_user_segment}")
 fig,ax = plt.subplots(figsize=(16, 7))
 sns.countplot(
-    data=rfm_combined, 
+    data=filtered_rfm_combined, 
     x='user_segment', 
     hue='user_type'
     )
