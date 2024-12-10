@@ -5,8 +5,8 @@ import seaborn as sns
 from babel.numbers import format_currency
 sns.set(style='dark')
 
-#st.set_page_config(layout="wide")
-st.title ('Dashboard : Bicycle Rental Trends and User Insight :bike:')
+
+st.title ('Bicycle Rental Trends and User Insight :bike:')
 
 def avg_rentals_per_hour (hour_df):
     """
@@ -63,22 +63,51 @@ hour_df = pd.read_csv("data/cleaned/hour_df_cleaned.csv")
 day_df = pd.read_csv("data/cleaned/day_df_cleaned.csv")
 rfm_combined = pd.read_csv("data/cleaned/rfm_combined.csv")        
 
-st.subheader(':sparkles: Peak Bike Usage by Season and Weather')
+
 #menghitung rata-rata penyewaan per jam, musim dan cuaca
 avg_rentals = avg_rentals_per_hour(hour_df)
 #membuat data untuk heatmap
 #heatmap_data = create_heatmap_data(avg_rentals)
 
-selected_season = st.selectbox(
+#Sidebar
+with st.sidebar:
+    st.sidebar.title("Filter For Each Dasboard")
+    
+    selected_season = st.selectbox(
     "Season:",
     ["All"] + list(season_mapping.values())  # Tambahkan "All" ke list pilihan
-)
+    )
 
-selected_weather = st.selectbox(
+    selected_weather = st.selectbox(
     "Weather",
     ["All"] + list(weathersit_mapping.values())  # Tambahkan "All" ke list pilihan
-)
+    )
+    
+    temp_min, temp_max = st.slider(
+    "Range of Temperature (Normalized):",
+    float(hour_df['temp'].min()),
+    float(hour_df['temp'].max()),
+    (float(hour_df['temp'].min()), float(hour_df['temp'].max()))
+    )
 
+    day_type_options = st.multiselect(
+    "Choose Day Type (Weekday, Weekend, Holiday)", 
+    day_df['day_type'].unique(), 
+    default=day_df['day_type'].unique()
+    )
+
+    columns_to_include = st.multiselect(
+    "Select Columns for Correlation Heatmap",
+    day_df.select_dtypes(include=['int64', 'float64']).columns,
+    default=day_df.select_dtypes(include=['int64', 'float64']).columns
+    )
+    
+    selected_user_segment = st.selectbox(
+    "Segment", 
+    ["All"] + list(rfm_combined['user_segment'].unique())  # Tambahkan "Semua"
+    )
+    
+#st.subheader(':sparkles: Peak Bike Usage by Season and Weather')  
 # Filter berdasarkan season
 if selected_season == "All":
     filtered_data = avg_rentals.copy()  # Jika "All", gunakan All data
@@ -111,10 +140,8 @@ heatmap_data_filtered.index = heatmap_data_filtered.index.map(
     lambda x: f"{season_mapping[x[0]]} - {weathersit_mapping[x[1]]}"
 )
 
-#st.write("Filtered Heatmap Data for Visualization:", heatmap_data_filtered) 
-
 #heatmap
-st.markdown(f'#### Peak Bike Usage {selected_season} Season During {selected_weather} Weather')
+st.markdown(f'##### Peak Bike Usage {selected_season} Season During {selected_weather} Weather')
 fig,ax = plt.subplots(figsize=(18,7))
 # Heatmap utama (seluruh data dengan transparansi rendah)
 sns.heatmap(
@@ -145,17 +172,12 @@ plt.ylabel("Season and Weather")
 #plt.yticks(rotation=0)
 st.pyplot(fig)
 
-#----------------------------------------------------------------------
+
+#-------------------------------------------------------------
 #scatterplot
-st.subheader(":sparkles: Effects of Weather Conditions and Temperature on Bike Rental Trends")
-temp_min, temp_max = st.slider(
-    "Range of Temperature (Normalized):",
-    float(hour_df['temp'].min()),
-    float(hour_df['temp'].max()),
-    (float(hour_df['temp'].min()), float(hour_df['temp'].max()))
-)
+#st.subheader(":sparkles: Effects of Weather Conditions and Temperature on Bike Rental Trends")
 filtered_hour_df = hour_df[(hour_df['temp'] >= temp_min) & (hour_df['temp'] <= temp_max)]
-st.markdown(f"#### Bike Rentals for Temperature Range {temp_min:.2f} - {temp_max:.2f}")
+st.markdown(f"##### Bike Rentals for Temperature Range {temp_min:.2f} - {temp_max:.2f}")
 fig,ax = plt.subplots(figsize=(10, 6))
 sns.scatterplot(
     x='temp', 
@@ -169,17 +191,11 @@ plt.ylabel("Total of Bike Rentals")
 plt.legend(title="Weather Condition", loc='upper left')
 st.pyplot(fig)
 
-#----------------------------------------------------------------------------
+#-------------------------------------------------------------
 
 # barplot
-st.subheader(':sparkles: Analyzing User Behavior: Registered vs. Casual Bike Rentals on Weekdays and Holidays')
-
-day_type_options = st.multiselect(
-    "Choose Day Type (Weekday, Weekend, Holiday)", 
-    day_df['day_type'].unique(), 
-    default=day_df['day_type'].unique()
-)
-
+#st.subheader(':sparkles: Analyzing User Behavior: Registered vs. Casual Bike Rentals on Weekdays and Holidays')
+st.markdown("##### Analyzing User Behavior: Registered vs. Casual Bike Rentals on Weekdays and Holidays")
 filtered_day_df = day_df[day_df['day_type'].isin(day_type_options)]
 fig,ax = plt.subplots(figsize=(10, 6))
 sns.barplot(
@@ -194,13 +210,8 @@ plt.xlabel('')
 plt.legend(title='User', loc='upper left')
 st.pyplot(fig)
 
-#-------------------------------------------------------------------------------
-st.subheader(':sparkles: Major Factors Impacting Bike Rental Usage')
-columns_to_include = st.multiselect(
-    "Select Columns for Correlation Heatmap",
-    day_df.select_dtypes(include=['int64', 'float64']).columns,
-    default=day_df.select_dtypes(include=['int64', 'float64']).columns
-)
+#-------------------------------------------------------------
+st.markdown('##### Major Factors Impacting Bike Rental Usage')
 #heatmap korelasi variabel
 correlation_matrix_filtered = day_df[columns_to_include].corr()
 fig,ax = plt.subplots(figsize=(16, 7))
@@ -213,15 +224,14 @@ sns.heatmap(
     )
 st.pyplot(fig)
 
-#-----------------------------------------------------------------------------
 
 #barplots
-st.subheader(':sparkles: Behavioral Patterns of Bike Users (Casual vs. Registered) Based on Rental Time, Usage Intensity, and Total Contribution')
-selected_user_segment = st.selectbox(
-    "Segment", 
-    rfm_combined['user_segment'].unique()
-)
-filtered_rfm_combined = rfm_combined[rfm_combined['user_segment'] == selected_user_segment]
+#st.markdown('##### Behavioral Patterns of Bike Users (Casual vs. Registered) Based on Rental Time, Usage Intensity, and Total Contribution')
+if selected_user_segment == "All":
+    filtered_rfm_combined = rfm_combined  # Jika "Semua", gunakan semua data
+else:
+    filtered_rfm_combined = rfm_combined[rfm_combined['user_segment'] == selected_user_segment]
+    
 st.markdown(f"#### Behavioral Patterns for Segment: {selected_user_segment}")
 fig,ax = plt.subplots(figsize=(16, 7))
 sns.countplot(
